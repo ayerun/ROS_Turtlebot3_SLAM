@@ -1,7 +1,13 @@
 <launch>
     <arg name="teleop" default='false'/>
+
+    <!-- Gazebo -->
     <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_house.launch" />
+
+    <!-- Teleoperation -->
     <include file="$(find turtlebot3_teleop)/launch/turtlebot3_teleop_key.launch" if='$(arg teleop)'/>
+
+    <!-- AMCL -->
     <include file="$(find turtlebot3_navigation)/launch/turtlebot3_navigation.launch" >
         <arg name="map_file" value="$(find turtle_slam)/map/map.yaml" />
     </include>

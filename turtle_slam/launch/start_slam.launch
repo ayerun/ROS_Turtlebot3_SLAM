@@ -1,8 +1,16 @@
 <launch>
     <arg name="sync" default='false'/>
+
+    <!-- Gazebo -->
     <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_house.launch" />
+
+    <!-- Teleoperation -->
     <include file="$(find turtlebot3_teleop)/launch/turtlebot3_teleop_key.launch" />
+
+    <!-- Mapping -->
     <include file="$(find slam_toolbox)/online_async.launch" unless='$(arg sync)' />
     <include file="$(find slam_toolbox)/online_sync.launch" if='$(arg sync)' />
+
+    <!-- Localization and Map -->
     <include file="$(find turtlebot3_navigation)/launch/turtlebot3_navigation.launch" />
 </launch>
