@@ -1,7 +1,7 @@
 # Turtle Slam Package
 ### Author: Arun Kumar
 
-#### This package is used to apply the slam_toolbox to the TurtleBot3. The package provides TurtleBot functionaliy for SLAM, AMCL, and autonomous exploration with SLAM.
+#### This package is used to apply the slam_toolbox to the TurtleBot3. The package provides TurtleBot functionality for SLAM, AMCL, and autonomous exploration with SLAM.
 
 ![](turtle_slam/videos/slam.gif)
 
@@ -29,5 +29,5 @@
 roslaunch turtle_slam nav_stack.launch teleop:=true
 ```
 #### Videos
-AMCL (nav_stack.launch): https://youtu.be/3Thl59n-Sw0
-SLAM (slam_stack.launch): https://youtu.be/Dz4RJW8634Y
+* AMCL (nav_stack.launch): https://youtu.be/3Thl59n-Sw0
+* SLAM (slam_stack.launch): https://youtu.be/Dz4RJW8634Y
