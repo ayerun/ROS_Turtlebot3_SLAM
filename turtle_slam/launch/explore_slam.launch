@@ -1,0 +1,9 @@
+<launch>
+
+    <!-- SLAM -->
+    <include file="$(find turtle_slam)/launch/slam_stack.launch" />
+
+    <!-- Autonomous Exploration -->
+    <node pkg='turtle_slam' name='explore' type='explore' output='screen'/>
+
+</launch>

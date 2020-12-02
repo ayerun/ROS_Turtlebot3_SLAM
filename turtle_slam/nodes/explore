@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import rospy
+from nav_msgs.msg import OccupancyGrid
+from geometry_msgs.msg import Twist
 
 class Explore:
     '''
@@ -10,13 +12,21 @@ class Explore:
         '''
         Constructor of the Explore class
         '''
-        rospy.Subscriber('/map',balh,self.map_callback)
+        #initialize attributes
+        self.map = OccupancyGrid()
+
+        #initialize subscribers
+        rospy.Subscriber('/map',OccupancyGrid,self.map_callback)
+
+        #initialize publishers
+        self.pub = rospy.Publisher('/cmd_vel',Twist,queue_size=10)
 
 
     def map_callback(self,mdata):
         '''
         callback function for map subscriber
         '''
+        self.map = mdata
 
 
 def main():
