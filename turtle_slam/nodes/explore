@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 import rospy
+import actionlib
+from move_base_msgs.msg import MoveBaseFeedback, MoveBaseGoal, MoveBaseAction
 from nav_msgs.msg import OccupancyGrid
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Pose, Point, Quaternion
 
 class Explore:
     '''
@@ -12,14 +14,28 @@ class Explore:
         '''
         Constructor of the Explore class
         '''
+        rospy.logerr('constructing')
         #initialize attributes
-        self.map = OccupancyGrid()
+        self.map = OccupancyGrid()  
+
+        #initialize action
+        self.result = MoveBaseFeedback()
+        rospy.logerr('initializing action')
+        self.move_base = actionlib.SimpleActionClient('move_base',MoveBaseAction)
+        self.move_base.wait_for_server()
+        rospy.logerr('action initialized')
 
         #initialize subscribers
         rospy.Subscriber('/map',OccupancyGrid,self.map_callback)
+        rospy.logerr('subscriber initialized')
 
-        #initialize publishers
-        self.pub = rospy.Publisher('/cmd_vel',Twist,queue_size=10)
+        #test action
+        goal = MoveBaseGoal()
+        goal.target_pose.header.frame_id = 'map'
+        goal.target_pose.header.stamp = rospy.Time.now()
+        mygoal = Pose(Point(0.2,0.2,0),Quaternion(0,0,0,1))
+        goal.target_pose.pose = mygoal
+        self.move(goal)
 
 
     def map_callback(self,mdata):
@@ -27,6 +43,23 @@ class Explore:
         callback function for map subscriber
         '''
         self.map = mdata
+    
+    def move(self, goal):
+        # Send the goal pose to the MoveBaseAction server
+        self.move_base.send_goal(goal)
+        
+        # Allow 1 minute to get there
+        finished_within_time = self.move_base.wait_for_result(rospy.Duration(60)) 
+        
+        # If we don't get there in time, abort the goal
+        if not finished_within_time:
+            self.move_base.cancel_goal()
+            rospy.loginfo("Timed out achieving goal")
+        else:
+            # We made it!
+            state = self.move_base.get_state()
+            if state == GoalStatus.SUCCEEDED:
+                rospy.loginfo("Goal succeeded!")
 
 
 def main():
@@ -35,7 +68,10 @@ def main():
     rospy.init_node('explore')
     ex = Explore()
 
-if __name__ = '__main__':
+    while not rospy.is_shutdown():
+        rospy.spin()
+
+if __name__ == '__main__':
     try:
         main()
     except:

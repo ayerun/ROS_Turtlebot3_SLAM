@@ -9,6 +9,7 @@ project(turtle_slam)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
+  move_base_msgs
   nav_msgs
   rospy
   sensor_msgs
@@ -107,7 +108,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES turtle_slam
- CATKIN_DEPENDS geometry_msgs nav_msgs rospy sensor_msgs std_msgs
+ CATKIN_DEPENDS geometry_msgs move_base_msgs nav_msgs rospy sensor_msgs std_msgs
 #  DEPENDS system_lib
 )
 
