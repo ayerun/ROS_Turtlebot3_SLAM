@@ -14,20 +14,18 @@ class Explore:
         '''
         Constructor of the Explore class
         '''
-        rospy.logerr('constructing')
+
         #initialize attributes
-        self.map = OccupancyGrid()  
+        self.map = OccupancyGrid()
+        self.drate = rospy.Rate(1)  
 
         #initialize action
         self.result = MoveBaseFeedback()
-        rospy.logerr('initializing action')
         self.move_base = actionlib.SimpleActionClient('move_base',MoveBaseAction)
         self.move_base.wait_for_server()
-        rospy.logerr('action initialized')
 
         #initialize subscribers
         rospy.Subscriber('/map',OccupancyGrid,self.map_callback)
-        rospy.logerr('subscriber initialized')
 
         #test action
         goal = MoveBaseGoal()
@@ -49,17 +47,22 @@ class Explore:
         self.move_base.send_goal(goal)
         
         # Allow 1 minute to get there
-        finished_within_time = self.move_base.wait_for_result(rospy.Duration(60)) 
-        
-        # If we don't get there in time, abort the goal
-        if not finished_within_time:
-            self.move_base.cancel_goal()
-            rospy.loginfo("Timed out achieving goal")
-        else:
-            # We made it!
+        # finished_within_time = self.move_base.wait_for_result(rospy.Duration(60)) 
+
+        state = self.move_base.get_state()
+        while state != 3:
             state = self.move_base.get_state()
-            if state == GoalStatus.SUCCEEDED:
-                rospy.loginfo("Goal succeeded!")
+            rospy.logerr(state)
+            drate.sleep()
+
+        # If we don't get there in time, abort the goal
+        # if not finished_within_time:
+        #     self.move_base.cancel_goal()
+        #     rospy.loginfo("Timed out achieving goal")
+        # else:
+        #     # We made it!
+        #     state = self.move_base.get_state()
+        #     rospy.logerr(state)
 
 
 def main():
