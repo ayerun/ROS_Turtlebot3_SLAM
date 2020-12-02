@@ -3,7 +3,7 @@
 
 #### This package is used to apply the slam_toolbox to the TurtleBot3. The package provides TurtleBot functionaliy for SLAM, AMCL, and autonomous exploration with SLAM.
 
-![](videos/slam.gif)
+![](turtle_slam/videos/slam.gif)
 
 #### Usage Instructions:
 1. Add package to the src folder in your ROS workspace
