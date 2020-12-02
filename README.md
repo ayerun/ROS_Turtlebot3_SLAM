@@ -28,6 +28,6 @@
 ```
 roslaunch turtle_slam nav_stack.launch teleop:=true
 ```
-#### Videos
+#### Videos:
 * AMCL (nav_stack.launch): https://youtu.be/3Thl59n-Sw0
 * SLAM (slam_stack.launch): https://youtu.be/Dz4RJW8634Y
