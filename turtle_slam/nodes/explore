@@ -9,11 +9,14 @@ from geometry_msgs.msg import Pose, Point, Quaternion
 
 class Explore:
     '''
+    Actions:        move_base - Turtlebot move_base
+    Subscribers:    /move_base/global_costmap/costmap - OccupancyGrid of global costmap
     '''
     
     def __init__(self):
         '''
         Constructor of the Explore class
+        initializes attributes, actions, and subscribers
         '''
 
         #initialize attributes
@@ -29,22 +32,11 @@ class Explore:
         #initialize subscribers
         rospy.Subscriber('/move_base/global_costmap/costmap',OccupancyGrid,self.map_callback)
 
+        #allow time for subscriber initialization
         rospy.sleep(5)
-        self.random_move()
 
-        #test action
-        # goal = MoveBaseGoal()
-        # goal.target_pose.header.frame_id = 'map'
-        # goal.target_pose.header.stamp = rospy.Time.now()
-        # mygoal = Pose(Point(0.2,0.2,0),Quaternion(0,0,0,1))
-        # goal.target_pose.pose = mygoal
-        # self.move(goal)
-        # print('sleeping')
-        # rospy.sleep(45)
-        # print('awake')
-        # mygoal = Pose(Point(0.2,0.4,0),Quaternion(0,0,0,1))
-        # goal.target_pose.pose = mygoal
-        # self.move(goal)
+        #start random exploration
+        self.random_move()
 
 
     def map_callback(self,mdata):
@@ -55,6 +47,12 @@ class Explore:
         self.map = mdata
     
     def move(self, goal):
+        '''
+        sends goal pose to the MoveBaseAction client
+        updates status attribute
+        args:
+            goal (MoveBaseGoal): waypoint for Turtlebot
+        '''
         # Send the goal pose to the MoveBaseAction server
         self.move_base.send_goal(goal,done_cb=self.done)
         self.status = 1
@@ -64,13 +62,18 @@ class Explore:
         '''
         Action done callback function to update status and perform call a new random move
         args:
-            gstatus (GoalStatus)
-            result
+            gstatus (GoalStatus): integer representing goal status
+            result: action result
         '''
         self.status = 0
         self.random_move()
     
     def random_move(self):
+        '''
+        Generates random goal withing global costmap
+        if occupancy probability is less than 40 the goal is sent to move_base
+        if occupancy probability is greater than 40 a new random goal is generated
+        '''
 
         #Parse cost map information
         h = self.map.info.height
@@ -78,22 +81,17 @@ class Explore:
         res = self.map.info.resolution
         x0 = self.map.info.origin.position.x
         y0 = self.map.info.origin.position.y
-        print('width: ' + str(w))
-        print('height: ' + str(h))
-        print('resolution: ' + str(res))
 
         #pick random cell in occupancy grid
         rand_h = random.randrange(0,h)
         rand_w = random.randrange(0,w)
         rand_cell = rand_h*w+rand_w
-        print('cell: ' + str(rand_cell))
 
         #get occupancy probability
         prob = self.map.data[rand_cell]
-        print('prob: ' + str(prob))
 
         #set goal
-        if prob < 50 and prob > 0:
+        if prob < 40 and prob >= 0:
             #get x and y coordinate of cell
             xgoal = (rand_w*res)+x0
             ygoal = (rand_h*res)+y0
@@ -111,24 +109,26 @@ class Explore:
         
         #try again
         else:
-            print('')
-
-            #avoid recursive error
             try:
                 self.random_move()
+            #avoid recursive error
             except:
-                rospy.logerr('in expection')
                 self.status = 2
                 pass
 
 
 def main():
     '''
+    main function
+    initializes node
+    creates instance of Explore class
     '''
+    
     rospy.init_node('explore')
     ex = Explore()
 
     while not rospy.is_shutdown():
+        #avoid recursive eroor
         if ex.status == 2:
             ex.random_move()
     
