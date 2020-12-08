@@ -13,7 +13,10 @@
     * nav_stack.launch provides AMCL using a map made with explore_slam.launch
     * slam_stack.launch provides SLAM using the slam_toolbox in an unmapped location
     * explore_slam.launch makes the TurtleBot autonomously explore and map and unknown location
+        * The explore node features a self-designed random exploration algorithm. The algorithm generates random waypoints within the global costmap and executes the path if the occupancy probability is less than 40%.
 1. Saved maps are in the map directory
+    * map.yaml and map.pgm are a map generated using start_slam.launch
+    * map_autonomous.yaml and map_autonomous.pgm are a map generated using explore_slam.launch
 
 #### Configuration Instructions:
 1. start_slam.launch configuration
@@ -31,3 +34,4 @@ roslaunch turtle_slam nav_stack.launch teleop:=true
 #### Videos:
 * AMCL (nav_stack.launch): https://youtu.be/3Thl59n-Sw0
 * SLAM (slam_stack.launch): https://youtu.be/Dz4RJW8634Y
+* Autonomous Exploration (explore_slam.launch): https://youtu.be/QRLccdmz-as
