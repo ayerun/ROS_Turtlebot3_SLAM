@@ -2,6 +2,7 @@
 
 import rospy
 import actionlib
+import random
 from move_base_msgs.msg import MoveBaseFeedback, MoveBaseGoal, MoveBaseAction
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import Pose, Point, Quaternion
@@ -17,7 +18,8 @@ class Explore:
 
         #initialize attributes
         self.map = OccupancyGrid()
-        self.drate = rospy.Rate(1)  
+        self.drate = rospy.Rate(1)
+        self.status = 2    # 0:done 1:active 2:recursion depth reached
 
         #initialize action
         self.result = MoveBaseFeedback()
@@ -25,44 +27,99 @@ class Explore:
         self.move_base.wait_for_server()
 
         #initialize subscribers
-        rospy.Subscriber('/map',OccupancyGrid,self.map_callback)
+        rospy.Subscriber('/move_base/global_costmap/costmap',OccupancyGrid,self.map_callback)
+
+        rospy.sleep(5)
+        self.random_move()
 
         #test action
-        goal = MoveBaseGoal()
-        goal.target_pose.header.frame_id = 'map'
-        goal.target_pose.header.stamp = rospy.Time.now()
-        mygoal = Pose(Point(0.2,0.2,0),Quaternion(0,0,0,1))
-        goal.target_pose.pose = mygoal
-        self.move(goal)
+        # goal = MoveBaseGoal()
+        # goal.target_pose.header.frame_id = 'map'
+        # goal.target_pose.header.stamp = rospy.Time.now()
+        # mygoal = Pose(Point(0.2,0.2,0),Quaternion(0,0,0,1))
+        # goal.target_pose.pose = mygoal
+        # self.move(goal)
+        # print('sleeping')
+        # rospy.sleep(45)
+        # print('awake')
+        # mygoal = Pose(Point(0.2,0.4,0),Quaternion(0,0,0,1))
+        # goal.target_pose.pose = mygoal
+        # self.move(goal)
 
 
     def map_callback(self,mdata):
         '''
         callback function for map subscriber
+        updates map attribute
         '''
         self.map = mdata
     
     def move(self, goal):
         # Send the goal pose to the MoveBaseAction server
-        self.move_base.send_goal(goal)
+        self.move_base.send_goal(goal,done_cb=self.done)
+        self.status = 1
+
+    #Action callback
+    def done(self, gstatus, result):
+        '''
+        Action done callback function to update status and perform call a new random move
+        args:
+            gstatus (GoalStatus)
+            result
+        '''
+        self.status = 0
+        self.random_move()
+    
+    def random_move(self):
+
+        #Parse cost map information
+        h = self.map.info.height
+        w = self.map.info.width
+        res = self.map.info.resolution
+        x0 = self.map.info.origin.position.x
+        y0 = self.map.info.origin.position.y
+        print('width: ' + str(w))
+        print('height: ' + str(h))
+        print('resolution: ' + str(res))
+
+        #pick random cell in occupancy grid
+        rand_h = random.randrange(0,h)
+        rand_w = random.randrange(0,w)
+        rand_cell = rand_h*w+rand_w
+        print('cell: ' + str(rand_cell))
+
+        #get occupancy probability
+        prob = self.map.data[rand_cell]
+        print('prob: ' + str(prob))
+
+        #set goal
+        if prob < 50 and prob > 0:
+            #get x and y coordinate of cell
+            xgoal = (rand_w*res)+x0
+            ygoal = (rand_h*res)+y0
+            print('xgoal: ' + str(xgoal))
+            print('ygoal: ' + str(ygoal))
+            print('')
+
+            #send goal
+            goal = MoveBaseGoal()
+            goal.target_pose.header.frame_id = 'map'
+            goal.target_pose.header.stamp = rospy.Time.now()
+            mygoal = Pose(Point(xgoal,ygoal,0),Quaternion(0,0,0,1))
+            goal.target_pose.pose = mygoal
+            self.move(goal)
         
-        # Allow 1 minute to get there
-        # finished_within_time = self.move_base.wait_for_result(rospy.Duration(60)) 
+        #try again
+        else:
+            print('')
 
-        state = self.move_base.get_state()
-        while state != 3:
-            state = self.move_base.get_state()
-            rospy.logerr(state)
-            drate.sleep()
-
-        # If we don't get there in time, abort the goal
-        # if not finished_within_time:
-        #     self.move_base.cancel_goal()
-        #     rospy.loginfo("Timed out achieving goal")
-        # else:
-        #     # We made it!
-        #     state = self.move_base.get_state()
-        #     rospy.logerr(state)
+            #avoid recursive error
+            try:
+                self.random_move()
+            except:
+                rospy.logerr('in expection')
+                self.status = 2
+                pass
 
 
 def main():
@@ -72,7 +129,10 @@ def main():
     ex = Explore()
 
     while not rospy.is_shutdown():
-        rospy.spin()
+        if ex.status == 2:
+            ex.random_move()
+    
+    rospy.spin()
 
 if __name__ == '__main__':
     try:
