@@ -16,7 +16,7 @@
         * The explore node features a self-designed random exploration algorithm. The algorithm generates random waypoints within the global costmap and executes the path if the occupancy probability is less than 40%.
 1. Saved maps are in the map directory
     * map.yaml and map.pgm are a map generated using start_slam.launch
-    * map_autonomous.yaml and map_autonomous.pgm are a map generated using explore_slam.launch
+    * expl.yaml and expl.pgm are a map generated using explore_slam.launch
 
 #### Configuration Instructions:
 1. start_slam.launch configuration
